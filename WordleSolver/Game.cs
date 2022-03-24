@@ -7,7 +7,6 @@ namespace WordleSolver
 {
     class Game : IDisposable
     {
-        private List<string> wordlist;
         private string word;
         WordAnalysis wordAnalysis;
         private bool disposedValue;
@@ -15,18 +14,15 @@ namespace WordleSolver
         public Game(string _wordlist)
         {
             wordAnalysis = new WordAnalysis(_wordlist);
-            wordlist = new List<string>();
-            foreach (string line in System.IO.File.ReadLines(_wordlist))
-            {
-                wordlist.Add(line.ToLower());
-            }
+
         }
 
         // Very simple random, not going to bother with anything more crazy than that.
         public void PickWord()
         {
             Random rnd = new Random();
-            word = wordlist[rnd.Next(wordlist.Count)];
+            
+            word = wordAnalysis.words.ElementAt(rnd.Next(wordAnalysis.words.Count - 1)).Key;
         }
 
         //  Returns List of result for each letter with the following meaning:
@@ -112,46 +108,94 @@ namespace WordleSolver
         }
 
         // Another quick slap together to test against wordle.
-        //public void PlayWordle()
-        //{
-        //    List<string> guesses = new List<string>();
-        //    List<List<int>> results = new List<List<int>>();
-        //    List<string> alphabet = new List<string>()
-        //    {
-        //        "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q",
-        //        "r", "s", "t", "u", "v", "w", "x", "y", "z"
-        //    };
-        //    Console.WriteLine($"Battle of wordle begins!\nWe recommend starting with {wordAnalysis.words.OrderByDescending(x => x.Value).First().Key}");
+        public void PlayWordle()
+        {
+            List<string> guesses = new List<string>();
+            List<List<int>> results = new List<List<int>>();
+            List<string> alphabet = new List<string>()
+            {
+                "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q",
+                "r", "s", "t", "u", "v", "w", "x", "y", "z"
+            };
+            Console.WriteLine($"Battle of wordle begins!\nWe recommend starting with {wordAnalysis.words.OrderByDescending(x => x.Value).First().Key}");
+            Console.WriteLine("Results should be supplied in format of comma seperated values with the following logic:\n 0 = not in word, 1 = in word not correct position, 2 = in word in correct position");
 
 
-        //    for (int i = 0; i <= 5; i++)
-        //    {
-        //        if (i == 0)
-        //        {
-        //            Console.WriteLine("Value used");
-        //            guesses.Add(Console.ReadLine().ToLower());
-        //        }
-        //        else
-        //        {
-        //            guesses.Add(FindNextGuess(results[results.Count - 1], guesses[guesses.Count - 1], alphabet));
-        //            Console.WriteLine(guesses[guesses.Count - 1]);
-        //        }
+            for (int i = 0; i <= 5; i++)
+            {
+                string userInput = null;
+                if (i == 0)
+                {
+                    
+                    Console.WriteLine("Starting value used");
+                    while (true)
+                    {
+                        try
+                        {
+                            userInput = Console.ReadLine().Trim();
+                            if (userInput.Length != 5)
+                            {
+                                Console.WriteLine("Value must be 5 characters long.");
+                                userInput = null;
+                            }
+                            else if (!userInput.All(char.IsLetter))
+                            {
+                                Console.WriteLine("Invalid word supplied.");
+                                userInput = null;
+                            }
+                            else
+                            {
+                                break;
+                            }
+                        }
+                        catch
+                        {
+                            Console.WriteLine("Invalid input");
+                            userInput = null;
+                        }
+                    }
+                    guesses.Add(userInput.ToLower());
+                }
+                else
+                {
+                    guesses.Add(FindNextGuess(results[results.Count - 1], guesses[guesses.Count - 1], alphabet));
+                    Console.WriteLine(guesses[guesses.Count - 1]);
+                }
 
-        //        Console.WriteLine("results: ");
-        //        results.Add(Console.ReadLine().Split(',').Where(x => int.TryParse(x, out _)).Select(int.Parse).ToList());
+                Console.WriteLine("results: ");
+                while (true)
+                {
+                    try
+                    {
+                        userInput = Console.ReadLine().Trim();  
+                        if (userInput.All(char.IsLetter) || userInput.Split(',').Count() != 5)
+                        {
+                            Console.WriteLine("Invalid results supplied");
+                        }
+                        else
+                        {
+                            results.Add(userInput.Split(',').Where(x => int.TryParse(x, out _)).Select(int.Parse).ToList());
+                            break;
+                        }
+                    }
+                    catch
+                    {
+                        Console.WriteLine("Invalid input");
+                    }
+                }
 
-        //        //  loop over results and remove letters that aren't in the word from the available letters in the alphabet
-        //        for (int n = 0; n < 5; n++)
-        //        {
-        //            if (results[results.Count - 1][n] == 0)
-        //            {
-        //                if (alphabet.Contains(guesses[guesses.Count - 1][n].ToString())) { alphabet.Remove(guesses[guesses.Count - 1][n].ToString()); }
-        //            }
-        //        }
+                //  loop over results and remove letters that aren't in the word from the available letters in the alphabet
+                for (int n = 0; n < 5; n++)
+                {
+                    if (results[results.Count - 1][n] == 0)
+                    {
+                        if (alphabet.Contains(guesses[guesses.Count - 1][n].ToString())) { alphabet.Remove(guesses[guesses.Count - 1][n].ToString()); }
+                    }
+                }
 
-        //    }
+            }
 
-        //}
+        }
 
         private string FindNextGuess(List<int> lastResult, string lastGuess, List<string> alphabet)
         {

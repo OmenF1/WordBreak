@@ -9,19 +9,12 @@ namespace WordleSolver
     {
 
 
-        public static string wordlist = @"Lists\wordlist.csv";
+        public static string wordlist = @"Lists\wordlelist.csv";
 
         static void Main(string[] args)
         {
-            for (int i = 0; i < 5; i++)
-            {
-                using (Game g = new Game(wordlist))
-                {
-                    g.PickWord();
-                    var result = g.PlaySelf();
-                    Console.WriteLine($"Word: {result[result.Count - 1]} - Attempts: {result.Count}");
-                }
-            }
+            Game g = new Game(wordlist);
+            g.PlayWordle();
             Console.ReadKey();
         }
 
